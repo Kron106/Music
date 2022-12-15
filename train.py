@@ -21,7 +21,7 @@ def build_model(output_units, num_units, loss, learning_rate):
     :return model (tf model): Where the magic happens :D
     """
 
-    # create the model architecture
+    # 创建模型架构
     input = keras.layers.Input(shape=(None, output_units))
     x = keras.layers.LSTM(num_units[0])(input)
     x = keras.layers.Dropout(0.2)(x)
@@ -30,7 +30,7 @@ def build_model(output_units, num_units, loss, learning_rate):
 
     model = keras.Model(input, output)
 
-    # compile model
+    # 编译模型
     model.compile(loss=loss,
                   optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
                   metrics=["accuracy"])
@@ -41,7 +41,7 @@ def build_model(output_units, num_units, loss, learning_rate):
 
 
 def train(output_units=OUTPUT_UNITS, num_units=NUM_UNITS, loss=LOSS, learning_rate=LEARNING_RATE):
-    """Train and save TF model.
+    """训练并保存模型.
 
     :param output_units (int): Num output units
     :param num_units (list of int): Num of units in hidden layers
@@ -49,16 +49,16 @@ def train(output_units=OUTPUT_UNITS, num_units=NUM_UNITS, loss=LOSS, learning_ra
     :param learning_rate (float): Learning rate to apply
     """
 
-    # generate the training sequences
+    # 生成训练序列
     inputs, targets = generate_training_sequences(SEQUENCE_LENGTH)
 
-    # build the network
+    # 构建网络
     model = build_model(output_units, num_units, loss, learning_rate)
 
-    # train the model
+    # 训练模型
     model.fit(inputs, targets, epochs=EPOCHS, batch_size=BATCH_SIZE)
 
-    # save the model
+    # 保存模型
     model.save(SAVE_MODEL_PATH)
 
 
