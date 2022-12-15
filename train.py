@@ -6,7 +6,7 @@ OUTPUT_UNITS = 38
 NUM_UNITS = [256] #神经元的数量
 LOSS = "sparse_categorical_crossentropy"#损失函数
 LEARNING_RATE = 0.001#
-EPOCHS = 2
+EPOCHS = 10
 BATCH_SIZE = 64
 SAVE_MODEL_PATH = "model.h5"
 
@@ -47,7 +47,7 @@ def train(output_units=OUTPUT_UNITS, num_units=NUM_UNITS, loss=LOSS, learning_ra
 
     # 训练模型
     history=model.fit(inputs, targets, epochs=EPOCHS, batch_size=BATCH_SIZE)
-    pyplot.plot(history.history['val_loss'], label='test')
+    pyplot.plot(history.history['accuracy'], label='test')
     pyplot.legend()
     pyplot.show()
     # 保存模型
