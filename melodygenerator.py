@@ -9,62 +9,56 @@ class MelodyGenerator:
 
     def __init__(self, model_path="D:\code\Python code\pythonProject\generating-melodies-with-rnn-lstm\9 - Converting Generated Melodies to MIDI\model.h5"):
         """Constructor that initialises TensorFlow model"""
-
+        #加载模型
         self.model_path = model_path
         self.model = keras.models.load_model(model_path)
-
+        #加载映射
         with open(MAPPING_PATH, "r") as fp:
             self._mappings = json.load(fp)
-
+        #添加开始符号
         self._start_symbols = ["/"] * SEQUENCE_LENGTH
 
 
     def generate_melody(self, seed, num_steps, max_sequence_length, temperature):
         """Generates a melody using the DL model and returns a midi file.
-
-        :param seed (str): Melody seed with the notation used to encode the dataset
-        :param num_steps (int): Number of steps to be generated
-        :param max_sequence_len (int): Max number of steps in seed to be considered for generation
-        :param temperature (float): Float in interval [0, 1]. Numbers closer to 0 make the model more deterministic.
-            A number closer to 1 makes the generation more unpredictable.
-
         :return melody (list of str): List with symbols representing a melody
         """
-
-        # create seed with start symbols
+        #
+        #Create seed with start symbols
+        #创建一个旋律
         seed = seed.split()
         melody = seed
         seed = self._start_symbols + seed
 
-        # map seed to int
+        # 将映射转换为int
         seed = [self._mappings[symbol] for symbol in seed]
 
         for _ in range(num_steps):
 
-            # limit the seed to max_sequence_length
+            # 限制种子为最大序列长度
             seed = seed[-max_sequence_length:]
 
-            # one-hot encode the seed
+            # 独热编码
             onehot_seed = keras.utils.to_categorical(seed, num_classes=len(self._mappings))
-            # (1, max_sequence_length, num of symbols in the vocabulary)
+
             onehot_seed = onehot_seed[np.newaxis, ...]
 
-            # make a prediction
+            # 进行预测
             probabilities = self.model.predict(onehot_seed)[0]
             # [0.1, 0.2, 0.1, 0.6] -> 1
             output_int = self._sample_with_temperature(probabilities, temperature)
 
-            # update seed
+            # 更新种子
             seed.append(output_int)
 
-            # map int to our encoding
+            # 将输出转换为符号
             output_symbol = [k for k, v in self._mappings.items() if v == output_int][0]
 
-            # check whether we're at the end of a melody
+            # 处理结束符号
             if output_symbol == "/":
                 break
 
-            # update melody
+            # 更新旋律
             melody.append(output_symbol)
 
         return melody
@@ -72,12 +66,6 @@ class MelodyGenerator:
 
     def _sample_with_temperature(self, probabilites, temperature):
         """Samples an index from a probability array reapplying softmax using temperature
-
-        :param predictions (nd.array): Array containing probabilities for each of the possible outputs.
-        :param temperature (float): Float in interval [0, 1]. Numbers closer to 0 make the model more deterministic.
-            A number closer to 1 makes the generation more unpredictable.
-
-        :return index (int): Selected output symbol
         """
         predictions = np.log(probabilites) / temperature
         probabilites = np.exp(predictions) / np.sum(np.exp(predictions))
@@ -89,24 +77,19 @@ class MelodyGenerator:
 
 
     def save_melody(self, melody, step_duration=0.25, format="midi", file_name="mel.mid"):
-        """Converts a melody into a MIDI file
-
-        :param melody (list of str):
-        :param min_duration (float): Duration of each time step in quarter length
-        :param file_name (str): Name of midi file
+        """将旋律转换为 MIDI 文件
         :return:
         """
 
-        # create a music21 stream
+        # create a music21 stream 充当容器
         stream = m21.stream.Stream()
 
         start_symbol = None
         step_counter = 1
 
-        # parse all the symbols in the melody and create note/rest objects
+        # 解析旋律中的所有符号并创建 Note/rest 对象
         for i, symbol in enumerate(melody):
 
-            # handle case in which we have a note/rest
             if symbol != "_" or i + 1 == len(melody):
 
                 # ensure we're dealing with note/rest beyond the first one
@@ -114,7 +97,6 @@ class MelodyGenerator:
 
                     quarter_length_duration = step_duration * step_counter # 0.25 * 4 = 1
 
-                    # handle rest
                     if start_symbol == "r":
                         m21_event = m21.note.Rest(quarterLength=quarter_length_duration)
 
@@ -128,8 +110,6 @@ class MelodyGenerator:
                     step_counter = 1
 
                 start_symbol = symbol
-
-            # handle case in which we have a prolongation sign "_"
             else:
                 step_counter += 1
 

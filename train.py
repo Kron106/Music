@@ -1,10 +1,11 @@
 import tensorflow.keras as keras
+from matplotlib import pyplot
 from preprocess import generate_training_sequences, SEQUENCE_LENGTH
 
 OUTPUT_UNITS = 38
-NUM_UNITS = [256]
-LOSS = "sparse_categorical_crossentropy"
-LEARNING_RATE = 0.001
+NUM_UNITS = [256] #神经元的数量
+LOSS = "sparse_categorical_crossentropy"#损失函数
+LEARNING_RATE = 0.001#
 EPOCHS = 2
 BATCH_SIZE = 64
 SAVE_MODEL_PATH = "model.h5"
@@ -12,12 +13,6 @@ SAVE_MODEL_PATH = "model.h5"
 
 def build_model(output_units, num_units, loss, learning_rate):
     """Builds and compiles model
-
-    :param output_units (int): Num output units
-    :param num_units (list of int): Num of units in hidden layers
-    :param loss (str): Type of loss function to use
-    :param learning_rate (float): Learning rate to apply
-
     :return model (tf model): Where the magic happens :D
     """
 
@@ -42,11 +37,6 @@ def build_model(output_units, num_units, loss, learning_rate):
 
 def train(output_units=OUTPUT_UNITS, num_units=NUM_UNITS, loss=LOSS, learning_rate=LEARNING_RATE):
     """训练并保存模型.
-
-    :param output_units (int): Num output units
-    :param num_units (list of int): Num of units in hidden layers
-    :param loss (str): Type of loss function to use
-    :param learning_rate (float): Learning rate to apply
     """
 
     # 生成训练序列
@@ -56,8 +46,10 @@ def train(output_units=OUTPUT_UNITS, num_units=NUM_UNITS, loss=LOSS, learning_ra
     model = build_model(output_units, num_units, loss, learning_rate)
 
     # 训练模型
-    model.fit(inputs, targets, epochs=EPOCHS, batch_size=BATCH_SIZE)
-
+    history=model.fit(inputs, targets, epochs=EPOCHS, batch_size=BATCH_SIZE)
+    pyplot.plot(history.history['val_loss'], label='test')
+    pyplot.legend()
+    pyplot.show()
     # 保存模型
     model.save(SAVE_MODEL_PATH)
 
